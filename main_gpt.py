@@ -2,6 +2,8 @@ import os
 # os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 import openai
+from openai import OpenAI
+client = OpenAI()
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from transformers import pipeline
@@ -38,7 +40,7 @@ def retry_with_exponential_backoff(
     exponential_base: float = 2,
     jitter: bool = True,
     max_retries: int = 5,
-    errors: tuple = (openai.error.RateLimitError,),
+    errors: tuple = (),
 ):
     """Retry a function with exponential backoff."""
     def wrapper(*args, **kwargs):
@@ -343,12 +345,12 @@ def get_metrics(actual_labels: List[Any], generated_labels: List[Any]):
 
 @retry_with_exponential_backoff
 def completion_with_backoff(**kwargs):
-    return openai.Completion.create(**kwargs)
+    return client.completions.create(**kwargs)
 
 
 @retry_with_exponential_backoff
 def chat_completion_with_backoff(**kwargs):
-    return openai.ChatCompletion.create(model="gpt-3.5-turbo-0301", messages=kwargs['messages'], temperature=0, max_tokens=1)
+    return client.chat.completions.create(model="gpt-4-turbo", messages=kwargs['messages'], temperature=0, max_tokens=1)
     return openai.ChatCompletion.create(**kwargs)
 
 
@@ -372,11 +374,11 @@ def inference(test_strings: List[Dict[str, str]], ft_model: str, output_path:str
         if 'gpt-3.5' in ft_model:
             message = [{"role": 'user', "content": prompt}]
             res = chat_completion_with_backoff(model=ft_model, messages=message, max_tokens=1, temperature=0)
-            answers.append(res['choices'][0]['message']['content'])
+            answers.append(res.choices[0].message.content)
         else:
             res = completion_with_backoff(model=ft_model, prompt=prompt, max_tokens=1, temperature=0, logprobs=len(all_pos_labels))
             # res = openai.Completion.create(**args)
-            answers.append(res['choices'][0]['text'])
+            answers.append(res.choices[0].text)
             # answers_logs.append(res['choices'][0]['logprobs']['top_logprobs'][0])
         if (i % SAVE_STEPS) == 0 and i > 0:
             answers = get_final_answers(answers)
@@ -396,17 +398,17 @@ def get_parser():
     parser.add_argument("--data_dir", default="data/", type=str, help="where is the data")
     parser.add_argument("--openai_key", default="", type=str, help="the openai key")
 
-    parser.add_argument("--finetune", default=True, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
+    parser.add_argument("--finetune", default=False, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
     
     parser.add_argument("--mtl_mode", default=False, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument("--coherence_type", default="incremental", type=str, help="where the config is located")
     parser.add_argument("--classification_label", default="sent_binary", type=str, help="where the config is located")
 
     # Base Model 
-    parser.add_argument("--model_name", default="text-davinci-003", type=str,  help="pretrained model")
+    parser.add_argument("--model_name", default="gpt-3.5", type=str,  help="pretrained model")
     
     parser.add_argument("--load_mode", default=True, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
-    parser.add_argument("--debug_mode", default=True, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
+    parser.add_argument("--debug_mode", default=False, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
     # Data Params    
     parser.add_argument("--batch_size", default=16, type=int, help="the batch size not in debug mode")
     parser.add_argument("--num_epochs", default=5, type=int, help="the batch size not in debug mode")
@@ -423,7 +425,7 @@ if __name__ == "__main__":
         n_gpu=0  
 
     args = get_parser() 
-    os.environ['OPENAI_API_KEY'] = args.openai_key
+    # os.environ['OPENAI_API_KEY'] = args.openai_key
     num_epochs = 1 if args.debug_mode else args.num_epochs
 
     coherence_type = args.coherence_type if args.classification_label == 'score' else args.classification_label

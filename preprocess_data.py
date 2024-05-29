@@ -44,14 +44,14 @@ def get_reason_group(reason: int) -> str:
 
 
 def get_per_sent_df(data: Dict[str, Any]) -> pd.DataFrame:
-    titles, texts, sents = [], [], []
+    titles, texts, all_sents = [], [], []
     coherences, cohesions, consistencies, relevances = [], [], [], []
     for story_id, story_data in data.items():
         titles.append(story_data['Title'])
         texts.append(story_data['Text'])
         inc_data = story_data['IncrementalData']
         sents = inc_data['sentences']
-        sents.append(sents)
+        all_sents.append(sents)
         reasons_data = inc_data['reasons']
         num_annot = inc_data['num_annotators']
         num_sents = len(sents)
@@ -92,7 +92,7 @@ def get_per_sent_df(data: Dict[str, Any]) -> pd.DataFrame:
         consistencies.append(consistency_data)
         relevances.append(relevance_data)
     
-    per_sents_df = pd.DataFrame(list(zip(titles, texts, sents, coherences, 
+    per_sents_df = pd.DataFrame(list(zip(titles, texts, all_sents, coherences, 
                                         cohesions, consistencies, relevances)),
                                 columns =['title', 'text', 'sents', 'coherence_per_sent', 
                                 'cohesion_per_sent', 'consistency_per_sent', 'relevance_per_sent'])

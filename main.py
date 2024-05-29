@@ -53,14 +53,14 @@ from save_predictions import save_pair_bert, save_pair_t5
 from mtl_model import MultiTaskModel
 
 
-import wandb
-wandb.login()
+# import wandb
+# wandb.login()
 logger = logging.getLogger(__name__)
 
-# os.environ["WANDB_DISABLED"] = "true"
-os.environ["WANDB_PROJECT"] = "exprmnt"
-os.environ["WANDB_LOG_MODEL"] = "true"
-os.environ["WANDB_WATCH"] = "all"
+os.environ["WANDB_DISABLED"] = "true"
+# os.environ["WANDB_PROJECT"] = "exprmnt"
+# os.environ["WANDB_LOG_MODEL"] = "true"
+# os.environ["WANDB_WATCH"] = "all"
 
 
 def set_device():
@@ -469,7 +469,7 @@ def set_training_args(args, output_dir, debug_mode, config, coherence_type, batc
             # weight_decay=0.01,
             # save_total_limit=3,
             # load_best_model_at_end=True,
-            report_to="wandb",
+            # report_to="wandb",
             load_best_model_at_end=True,
 
             predict_with_generate=True,
@@ -506,7 +506,7 @@ def set_training_args(args, output_dir, debug_mode, config, coherence_type, batc
                 # weight_decay=0.01,
                 # save_total_limit=3,
                 # load_best_model_at_end=True,
-                report_to="wandb",
+                # report_to="wandb",
 
                 gradient_accumulation_steps=config["gradient_accumulation_steps"],  # Number of updates steps to accumulate the gradients for, before performing a backward/update pass.default=1
                 # gradient_accumulation_steps=1,  # Number of updates steps to accumulate the gradients for, before performing a backward/update pass.default=1
@@ -602,13 +602,13 @@ def get_parser():
     parser.add_argument("--mtl_mode", default=False, help="to train on several tasks or not", type=lambda x: (str(x).lower() == 'true'))
 
     parser.add_argument("--coherence_type", default="incremental", type=str, help="where the config is located")
-    parser.add_argument("--classification_label", default="score", type=str, help="where the config is located")
+    parser.add_argument("--classification_label", default="sent_binary", type=str, help="where the config is located")
     
     # Base Model 
-    parser.add_argument("--model_name", default="google/flan-t5-large", type=str,  help="pretrained model")
+    parser.add_argument("--model_name", default="google-bert/bert-base-uncased", type=str,  help="pretrained model")
     
     # Data Params
-    parser.add_argument("--debug_mode", default=True, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
+    parser.add_argument("--debug_mode", default=False, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument("--only_prediction", default=False, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument("--allow_loading", default=True, type=lambda x: (str(x).lower() == 'true'), help="to debug or not")
     
@@ -669,14 +669,14 @@ if __name__ == "__main__":
     train_t5 = True if 't5' in args.model_name else False
     training_args = set_training_args(args, output_dir_for_training, args.debug_mode, config, args.classification_label, args.batch_size, train_t5)
 
-    # start wandb logging
-    wandb_config = {
-        "encoder_name": args.model_name,
-        "learning_rate": training_args.learning_rate,
-        "max_seq_length": config['max_seq_length'],
-        "epochs": training_args.num_train_epochs,
-    }
-    wandb.init(project="Coherence", name=f"model_name: {args.model_name} for coherence new dataset type {coherence_type}", config=wandb_config, group=args.model_name)
+    # # start wandb logging
+    # wandb_config = {
+    #     "encoder_name": args.model_name,
+    #     "learning_rate": training_args.learning_rate,
+    #     "max_seq_length": config['max_seq_length'],
+    #     "epochs": training_args.num_train_epochs,
+    # }
+    # wandb.init(project="Coherence", name=f"model_name: {args.model_name} for coherence new dataset type {coherence_type}", config=wandb_config, group=args.model_name)
 
     data_args = set_data_args(args.debug_mode, output_dir_for_data, args.data_dir, config, args.allow_loading, coherence_type)
     extra_args = {'encoder_gradient_checkpointing': config["gradient_checkpointing"]}
@@ -684,7 +684,7 @@ if __name__ == "__main__":
     main(model_args, data_args, training_args, device=device, extra_args=extra_args)
 
     # mark the run as finished
-    wandb.finish()
+    # wandb.finish()
 
 
 
