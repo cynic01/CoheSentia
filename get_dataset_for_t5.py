@@ -152,6 +152,14 @@ def load_and_cache_coherence_dataset_into_pairs(data_args, tokenizer, training_a
                     pairs_guid.append(guid)
                     pairs_labels.append(final_label)
                     pairs_text = prefix + title_prefix + title + 'paragraph: ' + prev_sents + 'new sentence: ' + curr_sent
+            # prev_sents, curr_sent = ast.literal_eval(all_sents[j])
+            # labels = ast.literal_eval(all_labels[j]) # {'sent0': False, 'sent1': True}
+            # story_titles.append(all_titles[j])
+            # guid = "%s-%s" % (uid[j], 0)
+            # pairs_guid.append(guid)
+            # final_label = negative_label if labels['sent1'] else positive_label
+            # pairs_labels.append(final_label)
+            # pairs_text.append(prefix + title_prefix + all_titles[j] + 'paragraph: ' + prev_sents + 'new sentence: ' + curr_sent + question_prefix)
         
         examples_df = pd.DataFrame({'guid': pairs_guid,
                                     'title': story_titles,

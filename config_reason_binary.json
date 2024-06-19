@@ -6,9 +6,9 @@
     "num_labels": 2,
     "ignore_pad_token_for_loss": true,
     "learning_rate": 0.00002,
-    "epochs": 50,
-    "logging_steps": 100,
-    "save_steps": 100,
+    "epochs": 10,
+    "logging_steps": 5000,
+    "save_steps": 5000,
     "gradient_accumulation_steps": 1, 
     "gradient_checkpointing": false,
     "num_beams": 5

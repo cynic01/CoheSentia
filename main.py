@@ -605,7 +605,7 @@ def get_parser():
     parser.add_argument("--classification_label", default="sent_binary", type=str, help="where the config is located")
     
     # Base Model 
-    parser.add_argument("--model_name", default="google-bert/bert-base-uncased", type=str,  help="pretrained model")
+    parser.add_argument("--model_name", default="google-bert/bert-large-uncased", type=str,  help="pretrained model")
     
     # Data Params
     parser.add_argument("--debug_mode", default=False, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))

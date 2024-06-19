@@ -98,10 +98,10 @@ def get_label2idx(coherence_type):
 def get_parser():
     parser = argparse.ArgumentParser(description='MTL')
     ## Required parameters 
-    parser.add_argument("--data_path", default="output/", type=str, help="where is the data")
+    parser.add_argument("--data_path", default="output_cohesion/", type=str, help="where is the data")
 
-    parser.add_argument("--coherence_type", default="sent_reason", type=str, help="where the config is located")
-    parser.add_argument("--model_name", default="bert-large-uncased", type=str, help="where the config is located")
+    parser.add_argument("--coherence_type", default="sent_cohesion", type=str, help="where the config is located")
+    parser.add_argument("--model_name", default="google-bert/bert-base-uncased", type=str, help="where the config is located")
 
     parser.add_argument("--only_pos_labels", default=False, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument("--only_prediction", default=False, help="to debug or not", type=lambda x: (str(x).lower() == 'true'))

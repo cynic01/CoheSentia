@@ -201,6 +201,14 @@ def load_and_cache_coherence_dataset_into_pairs(data_args, tokenizer, training_a
                     guid = "%s-%s" % (uid[j], i)
                     pairs_guid.append(guid)
                     pairs_labels.append(final_label)
+            # prev_sents, curr_sent = ast.literal_eval(all_sents[j])
+            # labels = ast.literal_eval(all_labels[j]) # {'sent0': False, 'sent1': True}
+            # story_titles.append(all_titles[j])
+            # pairs_sent1.append(prev_sents)
+            # pairs_sent2.append(curr_sent)
+            # guid = "%s-%s" % (uid[j], 0)
+            # pairs_guid.append(guid)
+            # pairs_labels.append(int(labels['sent1']))
         
         examples_df = pd.DataFrame({'guid': pairs_guid,
                                     'title': story_titles,
@@ -211,6 +219,47 @@ def load_and_cache_coherence_dataset_into_pairs(data_args, tokenizer, training_a
         examples_dataset = datasets.Dataset.from_pandas(examples_df)
         return examples_dataset
 
+
+    def preprocess_function_ours(examples):
+        num_examples = len(examples['title'])
+        all_titles = examples['title']
+        all_sents = examples['sents']
+        if dataset_name == 'sent_binary':
+            all_labels = examples['coherence_per_sent']
+        elif dataset_name == 'sent_cohesion':
+            all_labels = examples['cohesion_per_sent']
+        elif dataset_name == 'sent_consistency':
+            all_labels = examples['consistency_per_sent']
+        elif dataset_name == 'sent_relevance':
+            all_labels = examples['relevance_per_sent']
+        else: # dataset_name == 'sent_reason' - multilabel classification 
+            all_labels1 = examples['coherence_per_sent']
+            all_labels2 = examples['cohesion_per_sent']
+            all_labels3 = examples['consistency_per_sent']
+            all_labels4 = examples['relevance_per_sent']
+            all_labels = [[lab1, lab2, lab3, lab4] for lab1, lab2, lab3, lab4 in zip(all_labels1, all_labels2, all_labels3, all_labels4)]
+
+        uid = examples['Unnamed: 0']
+        story_titles = []
+        pairs_sent1, pairs_sent2, pairs_guid, pairs_labels = [], [], [], []
+        for j in range(num_examples):
+            prev_sents, curr_sent = ast.literal_eval(all_sents[j])
+            labels = ast.literal_eval(all_labels[j]) # {'sent0': False, 'sent1': True}
+            story_titles.append(all_titles[j])
+            pairs_sent1.append(prev_sents)
+            pairs_sent2.append(curr_sent)
+            guid = "%s-%s" % (uid[j], 0)
+            pairs_guid.append(guid)
+            pairs_labels.append(int(labels['sent1']))
+        
+        examples_df = pd.DataFrame({'guid': pairs_guid,
+                                    'title': story_titles,
+                                    'sent1': pairs_sent1,
+                                    'sent2': pairs_sent2,
+                                    'label': pairs_labels,
+                                    })
+        examples_dataset = datasets.Dataset.from_pandas(examples_df)
+        return examples_dataset
 
     def tokenize_function(examples):
         if dataset_name in ['combined', 'holistic', 'incremental']:
@@ -254,7 +303,7 @@ def load_and_cache_coherence_dataset_into_pairs(data_args, tokenizer, training_a
             if not (save_mode and os.path.exists(train_save_path)):
                 logger.info("Creating train dataset and saving in cached file %s", train_save_path)
                 if dataset_name not in ['combined', 'holistic', 'incremental']:
-                    train_dataset = preprocess_function(train_dataset)
+                    train_dataset = preprocess_function_ours(train_dataset)
                 train_dataset = train_dataset.map(
                     tokenize_function,
                     batched=True,
@@ -270,7 +319,7 @@ def load_and_cache_coherence_dataset_into_pairs(data_args, tokenizer, training_a
             if not (save_mode and os.path.exists(val_save_path)):
                 logger.info("Creating validation dataset and saving in cached file %s", val_save_path)
                 if dataset_name not in ['combined', 'holistic', 'incremental']:
-                    validation_dataset = preprocess_function(validation_dataset)
+                    validation_dataset = preprocess_function_ours(validation_dataset)
                 validation_dataset = validation_dataset.map(
                     tokenize_function,
                     batched=True,
@@ -285,7 +334,7 @@ def load_and_cache_coherence_dataset_into_pairs(data_args, tokenizer, training_a
             if not (save_mode and os.path.exists(test_save_path)):
                 logger.info("Creating test dataset and saving in cached file %s", test_save_path)
                 if dataset_name not in ['combined', 'holistic', 'incremental']:
-                    test_dataset = preprocess_function(test_dataset)
+                    test_dataset = preprocess_function_ours(test_dataset)
                 test_dataset = test_dataset.map(
                     tokenize_function,
                     batched=True,
